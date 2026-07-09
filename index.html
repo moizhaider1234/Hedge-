@@ -439,4 +439,50 @@ const io = new IntersectionObserver((entries)=>{
 revealEls.forEach(el=>io.observe(el));
 
 // ---------- animated candlestick chart backdrop ----------
-cons
+const canvas = document.getElementById('chartCanvas');
+const ctx = canvas.getContext('2d');
+let w, h, candles = [];
+
+function resize(){
+  w = canvas.width = canvas.offsetWidth;
+  h = canvas.height = canvas.offsetHeight;
+  const count = Math.floor(w / 26);
+  candles = [];
+  let base = h * 0.75;
+  for(let i=0;i<count;i++){
+    const drift = (i / count) * h * 0.35;
+    const open = base - drift + (Math.random()*30-15);
+    const close = open - (Math.random()*40 - 12);
+    const high = Math.min(open, close) - Math.random()*20;
+    const low = Math.max(open, close) + Math.random()*20;
+    candles.push({open, close, high, low, x: i*26+13});
+  }
+}
+window.addEventListener('resize', resize);
+resize();
+
+let progress = 0;
+function draw(){
+  ctx.clearRect(0,0,w,h);
+  const visibleCount = Math.floor(progress);
+  for(let i=0;i<Math.min(visibleCount, candles.length);i++){
+    const c = candles[i];
+    const bullish = c.close < c.open;
+    ctx.strokeStyle = bullish ? 'rgba(57,255,106,0.55)' : 'rgba(255,92,92,0.35)';
+    ctx.fillStyle = bullish ? 'rgba(57,255,106,0.25)' : 'rgba(255,92,92,0.18)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(c.x, c.high);
+    ctx.lineTo(c.x, c.low);
+    ctx.stroke();
+    const top = Math.min(c.open, c.close);
+    const bh = Math.max(Math.abs(c.close - c.open), 2);
+    ctx.fillRect(c.x-7, top, 14, bh);
+  }
+  if(progress < candles.length + 20){ progress += 0.35; }
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
